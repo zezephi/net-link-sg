@@ -30,7 +30,43 @@
             flex-direction: column;
             align-items: center;
             min-height: 100vh;
+            overflow-x: hidden;
         }
+
+        /* CRT SCANLINE OVERLAY */
+        body::after {
+            content: " ";
+            display: block;
+            position: fixed;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+            z-index: 99;
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
+        }
+
+        /* ANIMATIONS */
+        @keyframes bootUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes pulse-green {
+            0% { box-shadow: 0 0 0 0 rgba(0, 255, 65, 0.4); }
+            70% { box-shadow: 0 0 0 6px rgba(0, 255, 65, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(0, 255, 65, 0); }
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* STAGGERED LOAD */
+        .anim-1 { animation: bootUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; opacity: 0; }
+        .anim-2 { animation: bootUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; opacity: 0; animation-delay: 0.1s; }
+        .anim-3 { animation: bootUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; opacity: 0; animation-delay: 0.2s; }
+        .anim-4 { animation: bootUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; opacity: 0; animation-delay: 0.3s; }
 
         /* HEADER & STATUS */
         header {
@@ -40,15 +76,18 @@
             border-bottom: 1px solid var(--border);
             padding-bottom: 15px;
         }
-        h1 { font-family: 'JetBrains Mono', monospace; font-size: 1rem; letter-spacing: -1px; margin: 0; color: var(--accent); }
+        h1 { font-family: 'JetBrains Mono', monospace; font-size: 1rem; letter-spacing: -1px; margin: 0; color: var(--accent); text-shadow: 0 0 10px rgba(0,255,65,0.2); }
         
         .status-pill {
             font-size: 0.7rem; font-family: 'JetBrains Mono', monospace;
             background: #111; padding: 4px 8px; border: 1px solid var(--border);
             color: var(--muted); display: flex; align-items: center; gap: 6px;
+            transition: border-color 0.3s;
         }
-        .led { width: 6px; height: 6px; background: #333; border-radius: 50%; }
-        .led.on { background: var(--accent); box-shadow: 0 0 5px var(--accent); }
+        .led { width: 6px; height: 6px; background: #333; border-radius: 50%; transition: background 0.3s; }
+        
+        .led.on { background: var(--accent); animation: pulse-green 2s infinite; }
+        .status-pill.active { border-color: var(--dim); color: var(--accent); }
 
         /* SECTION TITLES */
         .section-title {
@@ -58,7 +97,7 @@
             text-transform: uppercase;
         }
 
-        /* TACTICAL TABS (Detailed) */
+        /* TACTICAL TABS */
         .tab-bar {
             width: 100%; max-width: 450px;
             display: flex; gap: 5px;
@@ -75,24 +114,26 @@
             padding: 12px 0;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             cursor: pointer;
-            transition: 0.2s;
+            transition: all 0.3s ease;
+            position: relative; overflow: hidden;
         }
         
         .tab-name {
             font-family: 'Inter', sans-serif; font-weight: 800; font-size: 0.7rem;
-            color: #888; margin-bottom: 2px;
+            color: #888; margin-bottom: 2px; transition: color 0.3s;
         }
         .tab-val {
             font-family: 'JetBrains Mono', monospace; font-size: 0.6rem;
-            color: #444; letter-spacing: -0.5px;
+            color: #444; letter-spacing: -0.5px; transition: color 0.3s;
         }
         
         /* Active State */
         .tab.active {
             border-color: var(--accent);
             background: rgba(0, 255, 65, 0.05);
+            box-shadow: inset 0 0 15px rgba(0,255,65,0.05);
         }
-        .tab.active .tab-name { color: var(--accent); text-shadow: 0 0 5px rgba(0,255,65,0.3); }
+        .tab.active .tab-name { color: var(--accent); text-shadow: 0 0 8px rgba(0,255,65,0.4); }
         .tab.active .tab-val { color: var(--accent); opacity: 0.8; }
 
         /* STATS GRID */
@@ -103,22 +144,24 @@
         .card {
             background: var(--panel); border: 1px solid var(--border);
             padding: 15px; display: flex; flex-direction: column;
-            position: relative;
+            position: relative; transition: border-color 0.2s;
         }
-        /* Tech Corners */
-        .card::after { content:''; position: absolute; top:0; right:0; width:0; height:0; border-style:solid; border-width:0 10px 10px 0; border-color: transparent var(--border) transparent transparent; }
+        .card::after { content:''; position: absolute; top:0; right:0; width:0; height:0; border-style:solid; border-width:0 10px 10px 0; border-color: transparent var(--border) transparent transparent; transition: border-color 0.2s; }
+        
+        .card:hover { border-color: #444; }
+        .card:hover::after { border-color: transparent #444 transparent transparent; }
 
         .card.full { grid-column: span 2; flex-direction: row; justify-content: space-between; align-items: center; }
 
         .label { font-size: 0.65rem; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 5px; font-weight: 700; }
         .val-box { display: flex; align-items: baseline; }
-        .value { font-family: 'JetBrains Mono', monospace; font-size: 2.5rem; font-weight: 800; line-height: 1; color: #fff; }
+        .value { font-family: 'JetBrains Mono', monospace; font-size: 2.5rem; font-weight: 800; line-height: 1; color: #fff; transition: color 0.2s; }
         .unit { font-size: 0.8rem; color: #555; margin-left: 4px; font-weight: bold; }
 
         /* DYNAMIC COLORS */
-        .good { color: var(--accent); text-shadow: 0 0 10px rgba(0,255,65,0.2); }
+        .good { color: var(--accent); text-shadow: 0 0 15px rgba(0,255,65,0.3); }
         .fair { color: var(--warn); }
-        .bad { color: var(--danger); text-shadow: 0 0 10px rgba(255,50,50,0.3); }
+        .bad { color: var(--danger); text-shadow: 0 0 15px rgba(255,50,50,0.3); }
 
         /* BUTTON */
         button {
@@ -127,12 +170,15 @@
             border: 1px solid var(--accent);
             padding: 15px; font-family: 'JetBrains Mono', monospace;
             font-weight: 800; font-size: 1rem; cursor: pointer;
-            margin-bottom: 20px; transition: 0.2s;
+            margin-bottom: 20px; transition: all 0.2s;
             text-transform: uppercase; letter-spacing: 1px;
+            position: relative; overflow: hidden;
         }
-        button:active { background: var(--accent); color: #000; }
+        button:hover { box-shadow: 0 0 15px rgba(0,255,65,0.2); background: rgba(0,255,65,0.05); }
+        button:active { transform: scale(0.98); }
+        
         button.stop { border-color: var(--danger); color: var(--danger); }
-        button.stop:active { background: var(--danger); color: #fff; }
+        button.stop:hover { box-shadow: 0 0 15px rgba(255,50,50,0.2); background: rgba(255,50,50,0.05); }
 
         /* LOG */
         .log-window {
@@ -148,7 +194,10 @@
         #log-feed {
             padding: 10px; overflow-y: auto; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem;
         }
-        .log-row { display: flex; justify-content: space-between; padding: 3px 0; border-bottom: 1px dashed #111; }
+        .log-row { 
+            display: flex; justify-content: space-between; padding: 3px 0; border-bottom: 1px dashed #111;
+            animation: slideDown 0.2s ease-out;
+        }
         .spike { color: var(--danger); }
         .stable { color: #444; }
 
@@ -156,17 +205,17 @@
 </head>
 <body>
 
-    <header>
+    <header class="anim-1">
         <h1>NET_LINK <span style="font-size:0.6em; color:#444">// SINGAPORE</span></h1>
-        <div class="status-pill">
+        <div class="status-pill" id="status-pill">
             <div id="led" class="led"></div>
             <span id="status-text">OFFLINE</span>
         </div>
     </header>
 
     <!-- NEW PAYLOAD HEADER & TABS -->
-    <h2 class="section-title">PAYLOAD // CONFIG</h2>
-    <div class="tab-bar">
+    <h2 class="section-title anim-2">PAYLOAD // CONFIG</h2>
+    <div class="tab-bar anim-2">
         <div class="tab" onclick="setLoad(1, this)">
             <div class="tab-name">LIGHT</div>
             <div class="tab-val">1 KB/S</div>
@@ -185,7 +234,7 @@
         </div>
     </div>
 
-    <div class="grid">
+    <div class="grid anim-3">
         <div class="card">
             <span class="label">LATENCY</span>
             <div class="val-box">
@@ -209,9 +258,9 @@
         </div>
     </div>
 
-    <button id="btn" onclick="toggle()">INITIALIZE LINK</button>
+    <button id="btn" class="anim-4" onclick="toggle()">INITIALIZE LINK</button>
 
-    <div class="log-window">
+    <div class="log-window anim-4">
         <div class="log-head">
             <span>DATA STREAM</span>
             <span id="pkt-total">0 PKTS</span>
@@ -249,7 +298,7 @@
             // Restart if running
             if(running) {
                 stop();
-                setTimeout(start, 150);
+                setTimeout(start, 250); // Slight delay for effect
             }
         }
 
@@ -265,6 +314,7 @@
             btn.innerText = "TERMINATE LINK";
             btn.classList.add('stop');
             document.getElementById('led').classList.add('on');
+            document.getElementById('status-pill').classList.add('active');
             document.getElementById('status-text').innerText = "CONNECTED";
             document.getElementById('log-feed').innerHTML = '';
             
@@ -285,7 +335,6 @@
                 ws.onmessage = (e) => {
                     const str = e.data.toString();
                     let start;
-                    // Handle payload separator
                     if (str.includes("::")) start = parseFloat(str.split("::")[0]);
                     else start = parseFloat(str);
                     
@@ -307,6 +356,7 @@
             btn.innerText = "INITIALIZE LINK";
             btn.classList.remove('stop');
             document.getElementById('led').classList.remove('on');
+            document.getElementById('status-pill').classList.remove('active');
             document.getElementById('status-text').innerText = "OFFLINE";
             log("LINK TERMINATED", "stable");
         }
@@ -314,7 +364,6 @@
         function loop() {
             if(!running) return;
             if(ws.readyState === WebSocket.OPEN) {
-                // Send Time + Separator + Payload
                 ws.send(performance.now() + "::" + payloadStr);
                 loopTimer = setTimeout(loop, RATE);
             }
@@ -386,4 +435,4 @@
 
     </script>
 </body>
-              </html>
+</html>
