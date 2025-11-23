@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>NET_LINK // SG</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;800&family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #050505;
+            --panel: #0a0a0a;
+            --border: #333;
+            --accent: #00ff41; /* Cyber Green */
+            --dim: #005522;
+            --text: #e0e0e0;
+            --muted: #666;
+            --danger: #ff3333;
+            --warn: #ffcc00;
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* HEADER & STATUS */
+        header {
+            width: 100%; max-width: 450px;
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 25px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 15px;
+        }
+        h1 { font-family: 'JetBrains Mono', monospace; font-size: 1rem; letter-spacing: -1px; margin: 0; color: var(--accent); }
+        
+        .status-pill {
+            font-size: 0.7rem; font-family: 'JetBrains Mono', monospace;
+            background: #111; padding: 4px 8px; border: 1px solid var(--border);
+            color: var(--muted); display: flex; align-items: center; gap: 6px;
+        }
+        .led { width: 6px; height: 6px; background: #333; border-radius: 50%; }
+        .led.on { background: var(--accent); box-shadow: 0 0 5px var(--accent); }
+
+        /* SECTION TITLES */
+        .section-title {
+            width: 100%; max-width: 450px;
+            font-size: 0.65rem; color: var(--muted); letter-spacing: 1px;
+            font-weight: 700; margin-bottom: 8px; font-family: 'JetBrains Mono', monospace;
+            text-transform: uppercase;
+        }
+
+        /* TACTICAL TABS (Detailed) */
+        .tab-bar {
+            width: 100%; max-width: 450px;
+            display: flex; gap: 5px;
+            margin-bottom: 25px;
+            background: #0f0f0f; 
+            padding: 5px; border-radius: 4px;
+            border: 1px solid var(--border);
+        }
+        
+        .tab {
+            flex: 1;
+            background: #000;
+            border: 1px solid #222;
+            padding: 12px 0;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        
+        .tab-name {
+            font-family: 'Inter', sans-serif; font-weight: 800; font-size: 0.7rem;
+            color: #888; margin-bottom: 2px;
+        }
+        .tab-val {
+            font-family: 'JetBrains Mono', monospace; font-size: 0.6rem;
+            color: #444; letter-spacing: -0.5px;
+        }
+        
+        /* Active State */
+        .tab.active {
+            border-color: var(--accent);
+            background: rgba(0, 255, 65, 0.05);
+        }
+        .tab.active .tab-name { color: var(--accent); text-shadow: 0 0 5px rgba(0,255,65,0.3); }
+        .tab.active .tab-val { color: var(--accent); opacity: 0.8; }
+
+        /* STATS GRID */
+        .grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+            width: 100%; max-width: 450px; margin-bottom: 20px;
+        }
+        .card {
+            background: var(--panel); border: 1px solid var(--border);
+            padding: 15px; display: flex; flex-direction: column;
+            position: relative;
+        }
+        /* Tech Corners */
+        .card::after { content:''; position: absolute; top:0; right:0; width:0; height:0; border-style:solid; border-width:0 10px 10px 0; border-color: transparent var(--border) transparent transparent; }
+
+        .card.full { grid-column: span 2; flex-direction: row; justify-content: space-between; align-items: center; }
+
+        .label { font-size: 0.65rem; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 5px; font-weight: 700; }
+        .val-box { display: flex; align-items: baseline; }
+        .value { font-family: 'JetBrains Mono', monospace; font-size: 2.5rem; font-weight: 800; line-height: 1; color: #fff; }
+        .unit { font-size: 0.8rem; color: #555; margin-left: 4px; font-weight: bold; }
+
+        /* DYNAMIC COLORS */
+        .good { color: var(--accent); text-shadow: 0 0 10px rgba(0,255,65,0.2); }
+        .fair { color: var(--warn); }
+        .bad { color: var(--danger); text-shadow: 0 0 10px rgba(255,50,50,0.3); }
+
+        /* BUTTON */
+        button {
+            width: 100%; max-width: 450px;
+            background: transparent; color: var(--accent);
+            border: 1px solid var(--accent);
+            padding: 15px; font-family: 'JetBrains Mono', monospace;
+            font-weight: 800; font-size: 1rem; cursor: pointer;
+            margin-bottom: 20px; transition: 0.2s;
+            text-transform: uppercase; letter-spacing: 1px;
+        }
+        button:active { background: var(--accent); color: #000; }
+        button.stop { border-color: var(--danger); color: var(--danger); }
+        button.stop:active { background: var(--danger); color: #fff; }
+
+        /* LOG */
+        .log-window {
+            width: 100%; max-width: 450px; flex-grow: 1;
+            background: #000; border: 1px solid var(--border);
+            display: flex; flex-direction: column;
+            height: 250px; overflow: hidden;
+        }
+        .log-head {
+            background: #111; padding: 5px 10px; font-size: 0.6rem; color: #555;
+            display: flex; justify-content: space-between; border-bottom: 1px solid #222;
+        }
+        #log-feed {
+            padding: 10px; overflow-y: auto; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem;
+        }
+        .log-row { display: flex; justify-content: space-between; padding: 3px 0; border-bottom: 1px dashed #111; }
+        .spike { color: var(--danger); }
+        .stable { color: #444; }
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>NET_LINK <span style="font-size:0.6em; color:#444">// SINGAPORE</span></h1>
+        <div class="status-pill">
+            <div id="led" class="led"></div>
+            <span id="status-text">OFFLINE</span>
+        </div>
+    </header>
+
+    <!-- NEW PAYLOAD HEADER & TABS -->
+    <h2 class="section-title">PAYLOAD // CONFIG</h2>
+    <div class="tab-bar">
+        <div class="tab" onclick="setLoad(1, this)">
+            <div class="tab-name">LIGHT</div>
+            <div class="tab-val">1 KB/S</div>
+        </div>
+        <div class="tab" onclick="setLoad(20, this)">
+            <div class="tab-name">GAME</div>
+            <div class="tab-val">20 KB/S</div>
+        </div>
+        <div class="tab active" onclick="setLoad(40, this)">
+            <div class="tab-name">HEAVY</div>
+            <div class="tab-val">40 KB/S</div>
+        </div>
+        <div class="tab" onclick="setLoad(100, this)">
+            <div class="tab-name">MAX</div>
+            <div class="tab-val">100 KB/S</div>
+        </div>
+    </div>
+
+    <div class="grid">
+        <div class="card">
+            <span class="label">LATENCY</span>
+            <div class="val-box">
+                <span id="ping" class="value">--</span><span class="unit">MS</span>
+            </div>
+        </div>
+        <div class="card">
+            <span class="label">JITTER</span>
+            <div class="val-box">
+                <span id="jitter" class="value">--</span><span class="unit">MS</span>
+            </div>
+        </div>
+        <div class="card full">
+            <div>
+                <span class="label">PACKET INTEGRITY</span>
+                <div style="font-size:0.6rem; color:#555">SIMULATED LOSS %</div>
+            </div>
+            <div class="val-box">
+                <span id="loss" class="value good">0.0</span><span class="unit">%</span>
+            </div>
+        </div>
+    </div>
+
+    <button id="btn" onclick="toggle()">INITIALIZE LINK</button>
+
+    <div class="log-window">
+        <div class="log-head">
+            <span>DATA STREAM</span>
+            <span id="pkt-total">0 PKTS</span>
+        </div>
+        <div id="log-feed">
+            <div style="text-align:center; color:#333; margin-top:20px;">SYSTEM READY</div>
+        </div>
+    </div>
+
+    <script>
+        let ws;
+        let running = false;
+        let pings = [];
+        let dropped = 0;
+        let total = 0;
+        let jitterSum = 0;
+        let loopTimer;
+        
+        // Settings
+        const RATE = 100; // 100ms interval (10 packets/sec)
+        const SPIKE_LIMIT = 180; // Ping > 180ms = Loss
+        
+        // Default Load: Heavy (40KB/s)
+        let payloadStr = "X".repeat((40 * 1000) / 20);
+
+        function setLoad(kbps, el) {
+            // Update Tab UI
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            el.classList.add('active');
+
+            // Calculate new Payload
+            const bytes = (kbps * 1000) / 20;
+            payloadStr = "X".repeat(Math.floor(bytes));
+
+            // Restart if running
+            if(running) {
+                stop();
+                setTimeout(start, 150);
+            }
+        }
+
+        function toggle() {
+            if(running) stop();
+            else start();
+        }
+
+        function start() {
+            running = true;
+            // UI
+            const btn = document.getElementById('btn');
+            btn.innerText = "TERMINATE LINK";
+            btn.classList.add('stop');
+            document.getElementById('led').classList.add('on');
+            document.getElementById('status-text').innerText = "CONNECTED";
+            document.getElementById('log-feed').innerHTML = '';
+            
+            // Reset
+            pings = []; dropped = 0; total = 0; jitterSum = 0;
+            uiUpdate(0,0,0);
+
+            // WebSocket
+            const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+            const host = window.location.host;
+
+            try {
+                ws = new WebSocket(protocol + host);
+                ws.onopen = () => {
+                    log("LINK ESTABLISHED", "stable");
+                    loop();
+                };
+                ws.onmessage = (e) => {
+                    const str = e.data.toString();
+                    let start;
+                    // Handle payload separator
+                    if (str.includes("::")) start = parseFloat(str.split("::")[0]);
+                    else start = parseFloat(str);
+                    
+                    const lat = performance.now() - start;
+                    process(lat);
+                };
+                ws.onclose = () => { if(running) stop(); };
+                ws.onerror = () => { log("LINK ERROR", "spike"); stop(); };
+            } catch(e) { console.error(e); }
+        }
+
+        function stop() {
+            running = false;
+            clearTimeout(loopTimer);
+            if(ws) ws.close();
+            
+            // UI
+            const btn = document.getElementById('btn');
+            btn.innerText = "INITIALIZE LINK";
+            btn.classList.remove('stop');
+            document.getElementById('led').classList.remove('on');
+            document.getElementById('status-text').innerText = "OFFLINE";
+            log("LINK TERMINATED", "stable");
+        }
+
+        function loop() {
+            if(!running) return;
+            if(ws.readyState === WebSocket.OPEN) {
+                // Send Time + Separator + Payload
+                ws.send(performance.now() + "::" + payloadStr);
+                loopTimer = setTimeout(loop, RATE);
+            }
+        }
+
+        function process(lat) {
+            total++;
+            pings.push(lat);
+
+            // Loss Logic
+            let isLoss = false;
+            if(lat > SPIKE_LIMIT) {
+                dropped++;
+                isLoss = true;
+            }
+
+            // Jitter Logic
+            let jit = 0;
+            if(pings.length > 1) {
+                jit = Math.abs(lat - pings[pings.length-2]);
+                jitterSum += jit;
+            }
+            const avgJit = pings.length > 1 ? jitterSum/(pings.length-1) : 0;
+
+            uiUpdate(lat, avgJit, (dropped/total)*100);
+            
+            // Log
+            const box = document.getElementById('log-feed');
+            const row = document.createElement('div');
+            row.className = "log-row";
+            const time = new Date().toLocaleTimeString().split(" ")[0];
+            const msg = isLoss ? `LAG SPIKE [${lat.toFixed(0)}ms]` : `${lat.toFixed(0)}ms OK`;
+            row.innerHTML = `<span style="color:#666">${time}</span> <span class="${isLoss?'spike':'stable'}">${msg}</span>`;
+            
+            box.prepend(row);
+            if(box.children.length > 40) box.lastChild.remove();
+            document.getElementById('pkt-total').innerText = total + " PKTS";
+        }
+
+        function uiUpdate(p, j, l) {
+            const pEl = document.getElementById('ping');
+            const jEl = document.getElementById('jitter');
+            const lEl = document.getElementById('loss');
+
+            pEl.innerText = p.toFixed(0);
+            jEl.innerText = j.toFixed(1);
+            lEl.innerText = l.toFixed(1);
+
+            color(pEl, p, 85, 150);
+            color(jEl, j, 15, 30);
+            color(lEl, l, 1, 5);
+        }
+
+        function color(el, val, good, bad) {
+            el.className = "value";
+            if(val <= good) el.classList.add("good");
+            else if(val <= bad) el.classList.add("fair");
+            else el.classList.add("bad");
+        }
+
+        function log(msg, type) {
+            const box = document.getElementById('log-feed');
+            const row = document.createElement('div');
+            row.className = "log-row";
+            row.style.justifyContent = "center";
+            row.innerHTML = `<span class="${type}">--- ${msg} ---</span>`;
+            box.prepend(row);
+        }
+
+    </script>
+</body>
+              </html>
